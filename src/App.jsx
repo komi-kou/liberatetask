@@ -11,13 +11,19 @@ function App() {
 
     // Subscribe to Firestore updates
     useEffect(() => {
+        console.log("🔄 Setting up Firestore subscription...");
         try {
             const unsubscribe = subscribeToTasks((updatedTasks) => {
+                console.log("📊 Tasks state updated:", updatedTasks.length, "tasks");
                 setTasks(updatedTasks);
             });
-            return () => unsubscribe();
+            console.log("✅ Firestore subscription established");
+            return () => {
+                console.log("🔌 Unsubscribing from Firestore");
+                unsubscribe();
+            };
         } catch (error) {
-            console.log("Firestore connection failed, using local mode");
+            console.error("❌ Failed to set up Firestore subscription:", error);
         }
     }, []);
 
@@ -32,20 +38,44 @@ function App() {
     };
 
     const handleSaveTask = async (taskData) => {
+        console.log("💾 handleSaveTask called with:", taskData);
         try {
             if (taskData._delete) {
+                console.log("🗑️ Deleting task:", taskData.id);
                 await deleteTask(taskData.id);
+                setIsFormOpen(false);
                 return;
             }
 
             if (taskData.id) {
+                console.log("✏️ Updating task:", taskData.id);
                 await updateTask(taskData);
             } else {
+                console.log("➕ Adding new task");
                 await addTask(taskData);
             }
+            console.log("✅ Task save completed successfully");
+            setIsFormOpen(false);
         } catch (error) {
-            console.error("Error saving task:", error);
-            throw error;
+            console.error("❌ Error saving task:", error);
+            console.error("Full error object:", error);
+            
+            // エラーメッセージを日本語で表示
+            let errorMessage = "タスクの保存に失敗しました。";
+            if (error.code === 'permission-denied') {
+                errorMessage += "\n\n原因: Firestoreのセキュリティルールで書き込みが許可されていません。\nFirebaseコンソールでセキュリティルールを確認してください。";
+            } else if (error.code === 'unavailable') {
+                errorMessage += "\n\n原因: インターネット接続を確認してください。";
+            } else if (error.code === 'failed-precondition') {
+                errorMessage += "\n\n原因: Firestoreのインデックスが必要です。\nコンソールに表示されたリンクからインデックスを作成してください。";
+            } else if (error.message) {
+                errorMessage += `\n\nエラー詳細: ${error.message}`;
+            } else if (error.code) {
+                errorMessage += `\n\nエラーコード: ${error.code}`;
+            }
+            
+            alert(errorMessage);
+            // エラー時はフォームを開いたままにする（ユーザーが再試行できるように）
         }
     };
 

@@ -32,24 +32,34 @@ export default function TaskForm({ isOpen, onClose, onSubmit, initialData }) {
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSubmit({
-            id: initialData?.id,
-            title,
-            description,
-            status,
-            assignee: assignee || '未割り当て',
-            dueDate,
-            priority,
-            updatedAt: new Date(),
-        });
-        onClose();
+        try {
+            await onSubmit({
+                id: initialData?.id,
+                title,
+                description,
+                status,
+                assignee: assignee || '未割り当て',
+                dueDate,
+                priority,
+                updatedAt: new Date(),
+            });
+            // 成功時はApp.jsxでフォームを閉じる
+        } catch (error) {
+            // エラー時はフォームを開いたままにする
+            console.error("Form submission error:", error);
+        }
     };
 
-    const handleDelete = () => {
-        onSubmit({ ...initialData, _delete: true });
-        onClose();
+    const handleDelete = async () => {
+        try {
+            await onSubmit({ ...initialData, _delete: true });
+            // 削除成功時はApp.jsxでフォームを閉じる
+        } catch (error) {
+            // エラー時はフォームを開いたままにする
+            console.error("Delete error:", error);
+        }
     };
 
     return (
