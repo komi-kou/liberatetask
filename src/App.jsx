@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import TaskBoard from './components/TaskBoard';
 import TaskForm from './components/TaskForm';
-import { subscribeToTasks, addTask, updateTask, deleteTask } from './lib/firestore';
+// Firebase Firestore から カスタムAPI に変更
+import { subscribeToTasks, addTask, updateTask, deleteTask } from './lib/api';
+// 元のFirebase実装を使う場合は以下のコメントを外してください
+// import { subscribeToTasks, addTask, updateTask, deleteTask } from './lib/firestore';
 
 function App() {
     const [tasks, setTasks] = useState([]);
