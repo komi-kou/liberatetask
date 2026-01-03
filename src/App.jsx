@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import TaskBoard from './components/TaskBoard';
 import TaskForm from './components/TaskForm';
-// Firebase Firestore から カスタムAPI に変更
-import { subscribeToTasks, addTask, updateTask, deleteTask } from './lib/api';
-// 元のFirebase実装を使う場合は以下のコメントを外してください
-// import { subscribeToTasks, addTask, updateTask, deleteTask } from './lib/firestore';
+import { subscribeToTasks, addTask, updateTask, deleteTask } from './lib/firestore';
 
 function App() {
     const [tasks, setTasks] = useState([]);
@@ -35,17 +32,6 @@ function App() {
     };
 
     const handleSaveTask = async (taskData) => {
-        // Optimistic / Local Update first
-        if (taskData._delete) {
-            setTasks(prev => prev.filter(t => t.id !== taskData.id));
-        } else if (taskData.id) {
-            setTasks(prev => prev.map(t => t.id === taskData.id ? taskData : t));
-        } else {
-            const newTask = { ...taskData, id: Date.now() };
-            setTasks(prev => [...prev, newTask]);
-        }
-
-        // Try Firestore
         try {
             if (taskData._delete) {
                 await deleteTask(taskData.id);
@@ -58,8 +44,8 @@ function App() {
                 await addTask(taskData);
             }
         } catch (error) {
-            console.error("Failed to save to Firestore (running locally):", error);
-            // Optional: Show a toast here
+            console.error("Error saving task:", error);
+            throw error;
         }
     };
 
